@@ -1,9 +1,9 @@
 {
-    "name": "lumaserv/proxmoxve",
+    "name": "klauke-enterprises/proxmoxve",
     "type": "library",
     "description": "A simple PHP 5.5+ Proxmox API client.",
     "keywords": ["Proxmox", "API", "KVM", "OpenVZ", "Virtualization"],
-    "homepage": "https://github.com/LUMASERV/ProxmoxVE",
+    "homepage": "https://github.com/klauke-enterprises/ProxmoxVE",
     "license": "MIT",
     "version": "v4.0.7",
 
@@ -21,8 +21,8 @@
     ],
 
     "support": {
-        "issues": "https://github.com/LUMASERV/ProxmoxVE/issues",
-        "source": "https://github.com/LUMASERV/ProxmoxVE"
+        "issues": "https://github.com/klauke-enterprises/ProxmoxVE/issues",
+        "source": "https://github.com/klauke-enterprises/ProxmoxVE"
     },
 
     "require": {
