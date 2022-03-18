@@ -29,14 +29,6 @@ class Proxmox
     private $httpClient;
 
     /**
-     * Contains the proxmox server authentication data.
-     *
-     * @var \ProxmoxVE\Credentials
-     */
-    private $credentials;
-
-
-    /**
      * Holds the response type used to requests the API, possible values are
      * json, extjs, html, text, png.
      *
@@ -52,15 +44,14 @@ class Proxmox
      * @var string
      */
     private $fakeType;
-
-
     /**
-     * Stores the ProxmoxVE user session such as ticket, username and csrf
-     * prevention token, are all in there.
-     *
-     * @var \ProxmoxVE\AuthToken
+     * @var string
      */
-    private $authToken;
+    private $tokenId;
+    /**
+     * @var string
+     */
+    private $tokenSecret;
 
 
     /**
@@ -77,15 +68,14 @@ class Proxmox
      *                                                      are not valid.
      */
     public function __construct(
-        $credentials,
+        $tokenId = "",
+        $tokenSecret = "",
         $responseType = 'array',
         $httpClient = null
     ) {
+        $this->tokenId = $tokenId;
+        $this->tokenSecret = $tokenSecret;
         $this->setHttpClient($httpClient);
-
-        // Set credentials and login to the Proxmox server.
-        $this->setCredentials($credentials);
-
         $this->setResponseType($responseType);
     }
 
@@ -107,29 +97,23 @@ class Proxmox
     private function requestResource($actionPath, $params = [], $method = 'GET')
     {
         $url = $this->getApiUrl() . $actionPath;
-
-        $cookies = CookieJar::fromArray([
-            'PVEAuthCookie' => $this->authToken->getTicket(),
-        ], $this->credentials->getHostname());
-
+        $headers = [
+            "Authorization" => "PVEAPIToken=$this->tokenId=$this->tokenSecret"
+        ];
         switch ($method) {
             case 'GET':
                 return $this->httpClient->get($url, [
                     'verify' => false,
                     'http_errors' => false,
-                    'cookies' => $cookies,
+                    'headers' => $headers,
                     'query' => $params,
                 ]);
             case 'POST':
             case 'PUT':
             case 'DELETE':
-                $headers = [
-                    'CSRFPreventionToken' => $this->authToken->getCsrf(),
-                ];
                 return $this->httpClient->request($method, $url, [
                     'verify' => false,
                     'http_errors' => false,
-                    'cookies' => $cookies,
                     'headers' => $headers,
                     'form_params' => $params,
                 ]);
@@ -177,75 +161,6 @@ class Proxmox
     {
         $this->httpClient = $httpClient ?: new Client();
     }
-
-
-    /**
-     * Attempts to login using set credentials, if succeeded will return the
-     * AuthToken used in all requests.
-     *
-     * @return \ProxmoxVE\AuthToken When successful login will return an
-     *                              instance of the AuthToken class.
-     *
-     * @throws \ProxmoxVE\Exception\AuthenticationException If login fails.
-     */
-    public function login()
-    {
-        $loginUrl = $this->credentials->getApiUrl() . '/json/access/ticket';
-        $response = $this->httpClient->post($loginUrl, [
-            'verify' => false,
-            'http_errors' => false,
-            'form_params' => [
-                'username' => $this->credentials->getUsername(),
-                'password' => $this->credentials->getPassword(),
-                'realm' => $this->credentials->getRealm(),
-            ],
-        ]);
-
-        $json = json_decode($response->getBody(), true);
-
-        if (!$json['data']) {
-            $error = 'Can not login using credentials: ' . $this->credentials;
-            throw new AuthenticationException($error);
-        }
-
-        return new AuthToken(
-            $json['data']['CSRFPreventionToken'],
-            $json['data']['ticket'],
-            $json['data']['username']
-        );
-    }
-
-
-    /**
-     * Gets the Credentials object associated with this proxmox API instance.
-     *
-     * @return \ProxmoxVE\Credentials Object containing all proxmox data used to
-     *                                connect to the server.
-     */
-    public function getCredentials()
-    {
-        return $this->credentials;
-    }
-
-
-    /**
-     * Assign the passed Credentials object to the ProxmoxVE.
-     *
-     * @param object $credentials A custom object holding credentials or a
-     *                            Credentials object to assign.
-     *
-     * @throws \ProxmoxVE\Exception\AuthenticationException If can not login.
-     */
-    public function setCredentials($credentials)
-    {
-        if (!$credentials instanceof Credentials) {
-            $credentials = new Credentials($credentials);
-        }
-
-        $this->credentials = $credentials;
-        $this->authToken = $this->login();
-    }
-
 
     /**
      * Sets the response type that is going to be returned when doing requests.
