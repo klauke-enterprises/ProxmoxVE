@@ -10,10 +10,6 @@
 namespace ProxmoxVE;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Cookie\CookieJar;
-use GuzzleHttp\Psr7\Request;
-
-use ProxmoxVE\Exception\AuthenticationException;
 
 /**
  * ProxmoxVE class. In order to interact with the proxmox server, the desired
