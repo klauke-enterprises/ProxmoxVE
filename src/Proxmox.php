@@ -48,6 +48,14 @@ class Proxmox
      * @var string
      */
     private $tokenSecret;
+    /**
+     * @var string
+     */
+    private $hostname;
+    /**
+     * @var int
+     */
+    private $port;
 
 
     /**
@@ -66,6 +74,8 @@ class Proxmox
     public function __construct(
         $tokenId = "",
         $tokenSecret = "",
+        $hostname = "",
+        $port = 8006,
         $responseType = 'array',
         $httpClient = null
     ) {
@@ -73,6 +83,8 @@ class Proxmox
         $this->tokenSecret = $tokenSecret;
         $this->setHttpClient($httpClient);
         $this->setResponseType($responseType);
+        $this->hostname = $hostname;
+        $this->port = $port;
     }
 
 
@@ -119,6 +131,10 @@ class Proxmox
         }
     }
 
+    public function getApiUrl()
+    {
+        return "https://{$this->hostname}:{$this->port}/api2/{$this->responseType}";
+    }
 
     /**
      * Parses the response to the desired return type.
