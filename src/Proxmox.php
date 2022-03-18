@@ -311,22 +311,6 @@ class Proxmox
         return $this->processHttpResponse($response);
     }
 
-
-    // Later on below this line we'll move this logic to another place?
-
-
-    /**
-     * Returns the proxmox API URL where requests are sended.
-     * Sample value: https://my-proxmox:8006/api2/json
-     *
-     * @return string Proxmox API URL.
-     */
-    public function getApiUrl()
-    {
-        return $this->credentials->getApiUrl() . '/' . $this->responseType;
-    }
-
-
     /**
      * Retrieves the '/access' resource of the Proxmox API resources tree.
      *
