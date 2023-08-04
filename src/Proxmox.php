@@ -112,7 +112,6 @@ class Proxmox
         switch ($method) {
             case 'GET':
                 return $this->httpClient->get($url, [
-                    'verify' => false,
                     'http_errors' => false,
                     'headers' => $headers,
                     'query' => $params,
@@ -121,7 +120,6 @@ class Proxmox
             case 'PUT':
             case 'DELETE':
                 $request_config = [
-                    'verify' => true,
                     'http_errors' => false,
                     'headers' => $headers,
                 ];
