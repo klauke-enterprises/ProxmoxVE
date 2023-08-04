@@ -78,7 +78,8 @@ class Proxmox
         $port = 8006,
         $responseType = 'array',
         $httpClient = null
-    ) {
+    )
+    {
         $this->tokenId = $tokenId;
         $this->tokenSecret = $tokenSecret;
         $this->setHttpClient($httpClient);
@@ -93,8 +94,8 @@ class Proxmox
      *
      * @param string $actionPath The resource tree path you want to request, see
      *                           more at http://pve.proxmox.com/pve2-api-doc/
-     * @param array $params      An associative array filled with params.
-     * @param string $method     HTTP method used in the request, by default
+     * @param array $params An associative array filled with params.
+     * @param string $method HTTP method used in the request, by default
      *                           'GET' method will be used.
      *
      * @return \Psr\Http\Message\ResponseInterface
@@ -102,7 +103,7 @@ class Proxmox
      * @throws \InvalidArgumentException If the given HTTP method is not one of
      *                                   'GET', 'POST', 'PUT', 'DELETE',
      */
-    private function requestResource($actionPath, $params = [], $method = 'GET')
+    private function requestResource($actionPath, $params = [], $method = 'GET', $json = false)
     {
         $url = $this->getApiUrl() . $actionPath;
         $headers = [
@@ -119,12 +120,17 @@ class Proxmox
             case 'POST':
             case 'PUT':
             case 'DELETE':
-                return $this->httpClient->request($method, $url, [
-                    'verify' => false,
+                $request_config = [
+                    'verify' => true,
                     'http_errors' => false,
                     'headers' => $headers,
-                    'form_params' => $params,
-                ]);
+                ];
+                if ($json) {
+                    $request_config['json'] = $params;
+                } else {
+                    $request_config['form_params'] = $params;
+                }
+                return $this->httpClient->request($method, $url, $request_config);
             default:
                 $errorMessage = "HTTP Request method {$method} not allowed.";
                 throw new \InvalidArgumentException($errorMessage);
@@ -221,7 +227,7 @@ class Proxmox
      *
      * @param string $actionPath The resource tree path you want to ask for, see
      *                           more at http://pve.proxmox.com/pve2-api-doc/
-     * @param array $params      An associative array filled with params.
+     * @param array $params An associative array filled with params.
      *
      * @return array             A PHP array json_decode($response, true).
      *
@@ -249,13 +255,13 @@ class Proxmox
      *
      * @param string $actionPath The resource tree path you want to ask for, see
      *                           more at http://pve.proxmox.com/pve2-api-doc/
-     * @param array $params      An associative array filled with params.
+     * @param array $params An associative array filled with params.
      *
      * @return array             A PHP array json_decode($response, true).
      *
      * @throws \InvalidArgumentException If given params are not an array.
      */
-    public function set($actionPath, $params = [])
+    public function set($actionPath, $params = [], $json = false)
     {
         if (!is_array($params)) {
             $errorMessage = 'PUT params should be an associative array.';
@@ -267,7 +273,7 @@ class Proxmox
             $actionPath = '/' . $actionPath;
         }
 
-        $response = $this->requestResource($actionPath, $params, 'PUT');
+        $response = $this->requestResource($actionPath, $params, 'PUT', $json);
         return $this->processHttpResponse($response);
     }
 
@@ -277,13 +283,13 @@ class Proxmox
      *
      * @param string $actionPath The resource tree path you want to ask for, see
      *                           more at http://pve.proxmox.com/pve2-api-doc/
-     * @param array $params      An associative array filled with POST params
+     * @param array $params An associative array filled with POST params
      *
      * @return array             A PHP array json_decode($response, true).
      *
      * @throws \InvalidArgumentException If given params are not an array.
      */
-    public function create($actionPath, $params = [])
+    public function create($actionPath, $params = [], $json = false)
     {
         if (!is_array($params)) {
             $errorMessage = 'POST params should be an asociative array.';
@@ -295,7 +301,7 @@ class Proxmox
             $actionPath = '/' . $actionPath;
         }
 
-        $response = $this->requestResource($actionPath, $params, 'POST');
+        $response = $this->requestResource($actionPath, $params, 'POST', $json);
         return $this->processHttpResponse($response);
     }
 
@@ -305,13 +311,13 @@ class Proxmox
      *
      * @param string $actionPath The resource tree path you want to ask for, see
      *                           more at http://pve.proxmox.com/pve2-api-doc/
-     * @param array $params      An associative array filled with params.
+     * @param array $params An associative array filled with params.
      *
      * @return array             A PHP array json_decode($response, true).
      *
      * @throws \InvalidArgumentException If given params are not an array.
      */
-    public function delete($actionPath, $params = [])
+    public function delete($actionPath, $params = [], $json = false)
     {
         if (!is_array($params)) {
             $errorMessage = 'DELETE params should be an associative array.';
@@ -323,7 +329,7 @@ class Proxmox
             $actionPath = '/' . $actionPath;
         }
 
-        $response = $this->requestResource($actionPath, $params, 'DELETE');
+        $response = $this->requestResource($actionPath, $params, 'DELETE', $json = false);
         return $this->processHttpResponse($response);
     }
 
